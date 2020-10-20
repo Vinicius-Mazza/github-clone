@@ -7,7 +7,7 @@ const Header: React.FC = () => {
     <Container>
       <GitHubLogo />
       <SearchForm>
-        <input placeholder="Enter Username or Repo..." />
+        <input placeholder="Search or jump to..." />
       </SearchForm>
     </Container>
   );
