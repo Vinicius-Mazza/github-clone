@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 
 import { 
   Container, 
@@ -16,6 +17,17 @@ import RepoCard from '../../components/RepoCard';
 import RandomCalendar from '../../components/RandomCalendar';
 
 const Profile: React.FC = () => {
+  const { username = 'Vinicius-Mazza' } = useParams();
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`http://api.github.com/users/${username}`),
+      fetch(`http://api.github.com/users/${username}/repos`)
+    ]).then(async responses => {
+      console.log(responses);
+    })
+  }, [username]);
+
   const TabContent = () => (
     <div className="content">
       <RepoIcon />
