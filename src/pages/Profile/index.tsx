@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { 
@@ -15,24 +15,57 @@ import {
 import ProfileData from '../../components/ProfileData';
 import RepoCard from '../../components/RepoCard';
 import RandomCalendar from '../../components/RandomCalendar';
+import { APIRepo, APIUser } from '../../@types';
 
-const Profile: React.FC = () => {
-  const { username = 'Vinicius-Mazza' } = useParams();
-
-  useEffect(() => {
-    Promise.all([
-      fetch(`http://api.github.com/users/${username}`),
-      fetch(`http://api.github.com/users/${username}/repos`)
-    ]).then(async responses => {
-      console.log(responses);
-    })
-  }, [username]);
+interface Data {
+  user?: APIUser;
+  repos?: APIRepo[];
+  error?: string;
+}
+  
+  const Profile: React.FC = () => {
+    const { username = 'Vinicius-Mazza' } = useParams();
+    const [data, setData] = useState<Data>();
+  
+    useEffect(() => {
+      Promise.all([
+        fetch(`https://api.github.com/users/${username}`),
+        fetch(`https://api.github.com/users/${username}/repos`),
+      ]).then(async (responses) => {
+        const [userResponse, reposResponse] = responses;
+  
+        if (userResponse.status === 404) {
+          setData({ error: 'User not found!' });
+          return;
+        }
+  
+        const user = await userResponse.json();
+        const repos = await reposResponse.json();
+  
+        const shuffledRepos = repos.sort(() => 0.5 - Math.random());
+        const slicedRepos = shuffledRepos.slice(0, 6); // 6 repos
+  
+        setData({
+          user,
+          repos: slicedRepos,
+        });
+      });
+    }, [username]);
+  
+    if (data?.error) {
+      return <h1>{data.error}</h1>;
+    }
+  
+    if (!data?.user || !data?.repos) {
+      return <h1>Loading...</h1>;
+    }
+  
 
   const TabContent = () => (
     <div className="content">
       <RepoIcon />
       <span className="label">Repositories</span>
-      <span className="number">6</span>
+      <span className="number">{data.user?.public_repos}</span>
     </div>
   )
   
@@ -51,15 +84,15 @@ const Profile: React.FC = () => {
       <Main>
         <LeftSide>
           <ProfileData 
-            username={'Vinicius-Mazza'}
-            name={'Vinicius Mazza'}
-            avatarUrl={'https://avatars3.githubusercontent.com/u/63126725?v=4'}
-            followers={0}
-            following={1}
-            company={undefined}
-            location={'Ceará, Brasil'}
-            email={'viniciusmazza2552@gmail.com'}
-            blog={undefined}
+            username={data.user.login}
+            name={data.user.name}
+            avatarUrl={data.user.avatar_url}
+            followers={data.user.followers}
+            following={data.user.following}
+            company={data.user.company}
+            location={data.user.location}
+            email={data.user.email}
+            blog={data.user.blog}
           />
         </LeftSide>
 
@@ -70,19 +103,19 @@ const Profile: React.FC = () => {
           </Tab>
 
           <Repos>
-            <h2>Here the repos...</h2>
+            <h2>Pinned</h2>
 
             <div>
-              {[1, 2, 3, 4, 5, 6].map(n => (
-                <RepoCard 
-                  key={n}
-                  username={'Vinicius-Mazza'}
-                  reponame={'github-clone'}
-                  description={'Demonstrative text for RepoCard!!'}
-                  language={n % 3 === 0 ? 'Javascript' : 'Typescript'}
-                  stars={0}
-                  forks={0}
-                />
+            {data.repos.map((item) => (
+              <RepoCard
+                key={item.name}
+                username={item.owner.login}
+                reponame={item.name}
+                description={item.description}
+                language={item.language}
+                stars={item.stargazers_count}
+                forks={item.forks}
+              />
               ))}
             </div>
           </Repos>
