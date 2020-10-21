@@ -12,9 +12,11 @@ export const Container = styled.div`
 export const Line = styled.div`
   max-width: 1280px;
   width: 100%;
+  border-top: 1px solid var(--border);
 `;
 
 export const GitHubLogo = styled(FaGithub)`
+  margin-top: 25px;
   fill: var(--border);
   width: 24px;
   height: 24px;
